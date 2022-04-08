@@ -1,8 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.EntityFrameworkCore;
 
 namespace DvD_Api.Models
 {
+    [Table("LoanType")]
     public partial class LoanType
     {
         public LoanType()
@@ -10,10 +14,13 @@ namespace DvD_Api.Models
             Loans = new HashSet<Loan>();
         }
 
+        [Key]
         public int LoanTypeNumber { get; set; }
-        public string LoanType1 { get; set; }
+        [Required]
+        public string LoanTypeName { get; set; }
         public int? Duration { get; set; }
 
+        [InverseProperty("TypeNumberNavigation")]
         public virtual ICollection<Loan> Loans { get; set; }
     }
 }
