@@ -35,6 +35,7 @@ builder.Services.AddAuthentication(options =>
         ValidateAudience = false,
         ValidAudience = confManager["JWT:ValidAudiance"],
         ValidIssuer = confManager["JWT:ValidIssuer"],
+        ClockSkew = TimeSpan.Zero,
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(confManager["JWT:Secret"]))
     };
 }
@@ -63,7 +64,7 @@ using (var scope = scopeFactory.CreateScope())
     var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
     if (db.Database.EnsureCreated())
     {
-
+        // TODO seed data and create a super admin.
     }
 }
 
