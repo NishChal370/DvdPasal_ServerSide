@@ -14,11 +14,11 @@ namespace DvD_Api.Controllers
     public class AuthController : ControllerBase
     {
         private readonly ApplicationDbContext _db;
-        private readonly UserManager<IdentityUser> _userManager;
+        private readonly UserManager<RopeyUser> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly IConfiguration _configuration;
         public AuthController(ApplicationDbContext databaseContext,
-            UserManager<IdentityUser> userManager,
+            UserManager<RopeyUser> userManager,
             RoleManager<IdentityRole> roleManager,
             IConfiguration configuration)
         {
@@ -57,7 +57,6 @@ namespace DvD_Api.Controllers
             return Unauthorized("Username or password incorrect.");
         }
 
-        // TODO ask for member info while registering.
         [HttpPost]
         [Route("register")]
         public async Task<IActionResult> RegisterUser([FromBody] RegisterModel model)
@@ -66,10 +65,14 @@ namespace DvD_Api.Controllers
             var user = await _userManager.FindByNameAsync(model.UserName);
             if (user != null) return Conflict("Username already exists!");
 
-            IdentityUser newUser = new IdentityUser
+            RopeyUser newUser = new RopeyUser
             {
+                FirstName = model.FirstName,
+                LastName = model.LastName,
+                DateOfBirth = model.DateOfBirth,
+                Gender = model.Gender,
                 Email = model.Email,
-                SecurityStamp = Guid.NewGuid().ToString(),
+                SecurityStamp = Guid.NewGuid().ToString(),          // Changes when password changes. 
                 UserName = model.UserName,
             };
 
@@ -80,12 +83,12 @@ namespace DvD_Api.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError, "User creation failed!");
             }
 
-            if (!await _roleManager.RoleExistsAsync(UserRoles.Member))
+            if (!await _roleManager.RoleExistsAsync(UserRoles.ASSISTANT))
             {
-                await _roleManager.CreateAsync(new IdentityRole(UserRoles.Member));
+                await _roleManager.CreateAsync(new IdentityRole(UserRoles.ASSISTANT));
             }
 
-            await _userManager.AddToRoleAsync(newUser, UserRoles.Member);
+            await _userManager.AddToRoleAsync(newUser, UserRoles.ASSISTANT);
 
             return Ok("User created successfully.");
         }

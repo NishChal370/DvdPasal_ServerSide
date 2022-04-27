@@ -14,7 +14,7 @@ namespace DvD_Api.Models
         public int DvDimageId { get; set; }
         public int DvDnumber { get; set; }
         
-
+        
         public string Image64 { get; set; }
 
         [ForeignKey("DvDnumber")]

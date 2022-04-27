@@ -19,20 +19,20 @@ namespace DvD_Api.Models
         public int CategoryNumber { get; set; }
         [Required]
         
-
+        
         public string Address { get; set; }
         [Required]
         [StringLength(50)]
-
+        
         public string FirstName { get; set; }
         [Required]
         [StringLength(50)]
-
+        
         public string LastName { get; set; }
         [Column(TypeName = "date")]
         public DateTime DateOfBirth { get; set; }
         
-
+        
         public string ProfileImage64 { get; set; }
 
         [ForeignKey("CategoryNumber")]

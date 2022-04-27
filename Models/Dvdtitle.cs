@@ -17,8 +17,10 @@ namespace DvD_Api.Models
         }
 
         [Key]
-        [Column("DVDNumber")]
-        public int Dvdnumber { get; set; }
+        public int DvdNumber { get; set; }
+        [StringLength(100)]
+        
+        public string DvdName { get; set; }
         public int ProducerNumber { get; set; }
         public int CategoryNumber { get; set; }
         public int StudioNumber { get; set; }
@@ -43,8 +45,8 @@ namespace DvD_Api.Models
         [InverseProperty("DvdnumberNavigation")]
         public virtual ICollection<Dvdcopy> Dvdcopies { get; set; }
 
-        [ForeignKey("Dvdnumber")]
-        [InverseProperty("Dvdnumbers")]
+        [ForeignKey("DvdNumber")]
+        [InverseProperty("DvdNumbers")]
         public virtual ICollection<Actor> ActorNumbers { get; set; }
     }
 }

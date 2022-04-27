@@ -18,7 +18,7 @@ namespace DvD_Api.Models
         public int ProducerNumber { get; set; }
         [Required]
         [StringLength(75)]
-
+        
         public string ProducerName { get; set; }
 
         [InverseProperty("ProducerNumberNavigation")]

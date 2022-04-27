@@ -11,23 +11,25 @@ namespace DvD_Api.Models
     {
         public Actor()
         {
-            Dvdnumbers = new HashSet<Dvdtitle>();
+            DvdNumbers = new HashSet<Dvdtitle>();
         }
 
         [Key]
         public int ActorNumber { get; set; }
         [Required]
         [StringLength(50)]
+        
         public string ActorName { get; set; }
-
         [Required]
         [StringLength(50)]
+        
         public string ActorLastName { get; set; }
+        
         
         public string ProfileUrl { get; set; }
 
         [ForeignKey("ActorNumber")]
         [InverseProperty("ActorNumbers")]
-        public virtual ICollection<Dvdtitle> Dvdnumbers { get; set; }
+        public virtual ICollection<Dvdtitle> DvdNumbers { get; set; }
     }
 }

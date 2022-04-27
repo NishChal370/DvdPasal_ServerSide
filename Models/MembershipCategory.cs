@@ -17,7 +17,6 @@ namespace DvD_Api.Models
         [Key]
         public int McategoryNumber { get; set; }
         
-
         public string Description { get; set; }
         public int TotalLoans { get; set; }
 

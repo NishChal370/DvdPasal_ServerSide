@@ -2,8 +2,7 @@
 {
     public static class UserRoles
     {
-        public const string Member = "member";
-        public const string Manager = "manager";
-        public const string Assistant = "Assistant";
+        public const string ADMIN = "Admin";
+        public const string ASSISTANT = "Assistant";
     }
 }

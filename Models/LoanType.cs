@@ -17,6 +17,8 @@ namespace DvD_Api.Models
         [Key]
         public int LoanTypeNumber { get; set; }
         [Required]
+        
+        
         public string LoanTypeName { get; set; }
         public int? Duration { get; set; }
 

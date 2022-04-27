@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Identity;
 
 namespace DvD_Api.Data
 {
-    public partial class ApplicationDbContext : IdentityDbContext<IdentityUser>
+    public partial class ApplicationDbContext : IdentityDbContext<RopeyUser>
     {
 
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
@@ -43,7 +43,6 @@ namespace DvD_Api.Data
                 entity.HasOne(d => d.DvDnumberNavigation)
                     .WithMany(p => p.DvDimages)
                     .HasForeignKey(d => d.DvDnumber)
-                    .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("DVDTitle_FKv3");
             });
 
@@ -61,13 +60,12 @@ namespace DvD_Api.Data
                 entity.HasOne(d => d.DvdnumberNavigation)
                     .WithMany(p => p.Dvdcopies)
                     .HasForeignKey(d => d.Dvdnumber)
-                    .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("DVDTitle_FKv2");
             });
 
             modelBuilder.Entity<Dvdtitle>(entity =>
             {
-                entity.HasKey(e => e.Dvdnumber)
+                entity.HasKey(e => e.DvdNumber)
                     .HasName("DVDTitle_PK");
 
                 entity.HasOne(d => d.CategoryNumberNavigation)
@@ -86,18 +84,16 @@ namespace DvD_Api.Data
                     .HasConstraintName("Studio_FK");
 
                 entity.HasMany(d => d.ActorNumbers)
-                    .WithMany(p => p.Dvdnumbers)
+                    .WithMany(p => p.DvdNumbers)
                     .UsingEntity<Dictionary<string, object>>(
                         "CastMember",
-                        l => l.HasOne<Actor>().WithMany().HasForeignKey("ActorNumber").OnDelete(DeleteBehavior.ClientSetNull).HasConstraintName("Actor_FK"),
-                        r => r.HasOne<Dvdtitle>().WithMany().HasForeignKey("Dvdnumber").OnDelete(DeleteBehavior.ClientSetNull).HasConstraintName("DVDTitle_FK"),
+                        l => l.HasOne<Actor>().WithMany().HasForeignKey("ActorNumber").HasConstraintName("Actor_FK"),
+                        r => r.HasOne<Dvdtitle>().WithMany().HasForeignKey("DvdNumber").HasConstraintName("DVDTitle_FK"),
                         j =>
                         {
-                            j.HasKey("Dvdnumber", "ActorNumber").HasName("CastMember_PK");
+                            j.HasKey("DvdNumber", "ActorNumber").HasName("CastMember_PK");
 
                             j.ToTable("CastMember");
-
-                            j.IndexerProperty<int>("Dvdnumber").HasColumnName("DVDNumber");
                         });
             });
 
@@ -109,19 +105,16 @@ namespace DvD_Api.Data
                 entity.HasOne(d => d.CopyNumberNavigation)
                     .WithMany(p => p.Loans)
                     .HasForeignKey(d => d.CopyNumber)
-                    .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("DVDCopy_FK");
 
                 entity.HasOne(d => d.MemberNumberNavigation)
                     .WithMany(p => p.Loans)
                     .HasForeignKey(d => d.MemberNumber)
-                    .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("Member_FK");
 
                 entity.HasOne(d => d.TypeNumberNavigation)
                     .WithMany(p => p.Loans)
                     .HasForeignKey(d => d.TypeNumber)
-                    .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("LoanType_FK");
             });
 
@@ -158,8 +151,6 @@ namespace DvD_Api.Data
             {
                 entity.HasKey(e => e.StudioNumber)
                     .HasName("Studio_PK");
-
-                entity.Property(e => e.StudioNumber).ValueGeneratedNever();
             });
 
 

@@ -17,7 +17,7 @@ namespace DvD_Api.Models
         [Key]
         public int CategoryNumber { get; set; }
         
-
+        
         public string CategoryDescription { get; set; }
         public bool AgeRestricted { get; set; }
 
