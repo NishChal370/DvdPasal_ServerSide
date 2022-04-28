@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
 
 namespace DvD_Api.Models
@@ -16,9 +17,10 @@ namespace DvD_Api.Models
 
         [Key]
         public int MemberNumber { get; set; }
+
+        [JsonIgnore]
         public int CategoryNumber { get; set; }
         [Required]
-        
         
         public string Address { get; set; }
         [Required]
@@ -37,7 +39,10 @@ namespace DvD_Api.Models
 
         [ForeignKey("CategoryNumber")]
         [InverseProperty("Members")]
+        [JsonPropertyName("membershipCategory")]
         public virtual MembershipCategory CategoryNumberNavigation { get; set; }
+
+        [JsonIgnore]
         [InverseProperty("MemberNumberNavigation")]
         public virtual ICollection<Loan> Loans { get; set; }
     }

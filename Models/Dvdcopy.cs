@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
 
 namespace DvD_Api.Models
@@ -23,8 +24,10 @@ namespace DvD_Api.Models
 
         [ForeignKey("Dvdnumber")]
         [InverseProperty("Dvdcopies")]
+        [JsonIgnore]
         public virtual Dvdtitle DvdnumberNavigation { get; set; }
         [InverseProperty("CopyNumberNavigation")]
+        [JsonIgnore]
         public virtual ICollection<Loan> Loans { get; set; }
     }
 }
