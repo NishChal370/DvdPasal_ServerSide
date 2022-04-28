@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
 
 namespace DvD_Api.Models
@@ -23,6 +24,7 @@ namespace DvD_Api.Models
         public int? Duration { get; set; }
 
         [InverseProperty("TypeNumberNavigation")]
+        [JsonIgnore]
         public virtual ICollection<Loan> Loans { get; set; }
     }
 }

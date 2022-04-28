@@ -102,6 +102,16 @@ namespace DvD_Api.Controllers
                 .Include(d => d.StudioNumberNavigation).ToList();
         }
 
+        [HttpGet("{dvdId}")]
+        public async Task<Dvdtitle> GetTitleById(int dvdId) {
+            return await _db.Dvdtitles
+                .Include(d => d.DvDimages)
+                .Include(d => d.ActorNumbers)
+                .Include(d => d.CategoryNumberNavigation)
+                .Include(d => d.ProducerNumberNavigation)
+                .Include(d => d.StudioNumberNavigation).Where(d => d.DvdNumber == dvdId).FirstOrDefaultAsync();
+        }
+
         [HttpDelete]
         public async Task<IActionResult> DeleteDvd(int id) {
             var dvdExists = await _db.Dvdtitles.FirstOrDefaultAsync(d => d.DvdNumber == id);
