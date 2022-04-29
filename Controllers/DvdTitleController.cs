@@ -93,7 +93,7 @@ namespace DvD_Api.Controllers
 
 
         [HttpGet]
-        public List<Dvdtitle> GetAllDvd() { 
+        public List<Dvdtitle> GetAllDvd() {
             return _db.Dvdtitles
                 .Include(d => d.DvDimages)
                 .Include(d => d.ActorNumbers)
@@ -102,7 +102,7 @@ namespace DvD_Api.Controllers
                 .Include(d => d.StudioNumberNavigation).ToList();
         }
 
-        [HttpGet("{dvdId}")]
+        [HttpGet("byId/{dvdId}")]
         public async Task<Dvdtitle> GetTitleById(int dvdId) {
             return await _db.Dvdtitles
                 .Include(d => d.DvDimages)
@@ -110,6 +110,49 @@ namespace DvD_Api.Controllers
                 .Include(d => d.CategoryNumberNavigation)
                 .Include(d => d.ProducerNumberNavigation)
                 .Include(d => d.StudioNumberNavigation).Where(d => d.DvdNumber == dvdId).FirstOrDefaultAsync();
+        }
+
+        [HttpGet("byLastName/{lastName}")]
+        public IEnumerable<Dvdtitle> GetTitlesByLastName(string lastName) {
+            return _db.Dvdtitles
+                    .Include(d => d.DvDimages)
+                .Include(d => d.ActorNumbers)
+                .Include(d => d.CategoryNumberNavigation)
+                .Include(d => d.ProducerNumberNavigation)
+                .Include(d => d.StudioNumberNavigation)
+                .Where(d => d.ActorNumbers.Where(a => a.ActorLastName == lastName).Any());
+        }
+
+        [HttpGet("inStock/{lastName}")]
+        public IEnumerable<Dvdtitle> GetInStockByLastName(string lastName)
+        {
+            var mDvD = _db.Dvdtitles
+                    .Include(d => d.DvDimages)
+                .Include(d => d.ActorNumbers)
+                .Include(d => d.CategoryNumberNavigation)
+                .Include(d => d.ProducerNumberNavigation)
+                .Include(d => d.StudioNumberNavigation)
+                .Include(d => d.Dvdcopies)
+                .Where(d => d.ActorNumbers.Where(a => a.ActorLastName == lastName).Any());
+
+            var dvdInLoan = _db.Loans.Where(l => l.DateReturned == null).Where(l => mDvD.Contains(l.CopyNumberNavigation.DvdnumberNavigation));
+
+            return dvdInLoan.Select(l => l.CopyNumberNavigation.DvdnumberNavigation);
+        }
+
+        [HttpGet("unpopular")]
+        public IEnumerable<Dvdtitle> GetUnpopularTitles() {
+
+            // Get all the dvd copies that were not in loan for 31 days or have never been loaned. 
+            var unpopularCopies = _db.Dvdcopies.
+                Include(c => c.Loans)
+                .Include(c => c.DvdnumberNavigation)
+                .Where(c => c.Loans.OrderBy(l => l.DateOut).LastOrDefault().DateOut.AddDays(31) < DateTime.Now || c.Loans.Count < 1);
+
+            // Only get the dvd title if there were no copies in loan.
+            var unpopularDvDTitles = _db.Dvdtitles.Include(d => d.Dvdcopies).Where(d => d.Dvdcopies.Count == unpopularCopies.Where(c => c.Dvdnumber == d.DvdNumber).Count());
+
+            return unpopularDvDTitles;
         }
 
         [HttpDelete]

@@ -177,5 +177,14 @@ namespace DvD_Api.Controllers
                 totalCharge = totalCharge,
             });
         }
+
+        [HttpPost("searchMember")]
+        public IEnumerable<Loan> SearchMembers(MemberSearchDto memberSearch)
+        {
+            return _db.Loans.Include(l => l.MemberNumberNavigation)
+                .Where(l => memberSearch.IsLastName ? l.MemberNumberNavigation.LastName == memberSearch.SearchTerm              // Search by last name
+                : l.MemberNumber.ToString() == memberSearch.SearchTerm)                                                        // Search by member Id
+                .Where(l => l.DateOut.AddDays(31) >= DateTime.Now);
+        }
     }
 }

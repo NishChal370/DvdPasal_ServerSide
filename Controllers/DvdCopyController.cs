@@ -44,16 +44,23 @@ namespace DvD_Api.Controllers
                 {
                     copyId = c.CopyNumber,
                     datePurchased = c.DatePurchased.ToString("d"),
+                    dvdId = c.Dvdnumber,
                     dvdTitle = c.DvdnumberNavigation.DvdName
                     
                 });
         }
 
-        [HttpGet("/available")]
+        [HttpGet("available")]
         public IEnumerable<Dvdcopy> GetAvailableCopy() {
             return _db.Dvdcopies
                 .Include(c => c.Loans)
                 .Where(c => c.Loans.Count() < 1 || c.Loans.All(l => l.DateReturned != null));
+        }
+
+
+        [HttpGet("old")]
+        public IEnumerable<Dvdcopy> GetOldCopies() {
+            return _db.Dvdcopies.Where(c => c.DatePurchased.AddDays(365) < DateTime.Now);
         }
 
         [HttpGet("{copyId}")]
@@ -67,6 +74,7 @@ namespace DvD_Api.Controllers
             return new {
                 copyId = mCopy.CopyNumber,
                 datePurchased = mCopy.DatePurchased.ToString("d"),
+                dvdId = mCopy.Dvdnumber,
                 dvdTitle = mCopy.DvdnumberNavigation.DvdName
             };
         }
