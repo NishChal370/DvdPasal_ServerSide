@@ -15,9 +15,11 @@ namespace DvD_Api.Models
         public int CopyNumber { get; set; }
         public int MemberNumber { get; set; }
         [Column(TypeName = "date")]
-        public DateTime? DateOut { get; set; }
+        [Required]
+        public DateTime DateOut { get; set; }
         [Column(TypeName = "date")]
-        public DateTime? DateDue { get; set; }
+        [Required]
+        public DateTime DateDue { get; set; }
         [Column(TypeName = "date")]
         public DateTime? DateReturned { get; set; }
         public int TypeNumber { get; set; }

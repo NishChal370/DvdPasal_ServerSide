@@ -1,4 +1,5 @@
 ﻿using DvD_Api.Data;
+using DvD_Api.DTO;
 using DvD_Api.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -17,21 +18,21 @@ namespace DvD_Api.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> AddCopy(Dvdcopy dvdCopy)
+        public async Task<IActionResult> AddCopy(CopyDto dvdCopy)
         {
-            if (dvdCopy.CopyNumber != 0)
+
+            if (_db.Dvdtitles.FirstOrDefault(d => d.DvdNumber == dvdCopy.DvdId) == null)
             {
-                return BadRequest();
+                return BadRequest($"Dvd with id {dvdCopy.DvdId} does not exist");
             }
 
-            if (_db.Dvdtitles.FirstOrDefault(d => d.DvdNumber == dvdCopy.Dvdnumber) == null)
-            {
-                return BadRequest($"Dvd with id {dvdCopy.Dvdnumber} does not exist");
-            }
-
-            await _db.Dvdcopies.AddAsync(dvdCopy);
+            await _db.Dvdcopies.AddAsync(new Dvdcopy { 
+                CopyNumber = 0,
+                Dvdnumber = dvdCopy.DvdId,
+                DatePurchased = dvdCopy.DatePurchased,
+            });
             await _db.SaveChangesAsync();
-            return Ok($"Added new copy with id {dvdCopy.CopyNumber}");
+            return Ok($"Added new copy successfully.");
         }
 
         [HttpGet]
@@ -46,6 +47,13 @@ namespace DvD_Api.Controllers
                     dvdTitle = c.DvdnumberNavigation.DvdName
                     
                 });
+        }
+
+        [HttpGet("/available")]
+        public IEnumerable<Dvdcopy> GetAvailableCopy() {
+            return _db.Dvdcopies
+                .Include(c => c.Loans)
+                .Where(c => c.Loans.Count() < 1 || c.Loans.All(l => l.DateReturned != null));
         }
 
         [HttpGet("{copyId}")]

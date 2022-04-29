@@ -45,5 +45,9 @@ namespace DvD_Api.Models
         [JsonIgnore]
         [InverseProperty("MemberNumberNavigation")]
         public virtual ICollection<Loan> Loans { get; set; }
+
+        public bool IsOldEnough() {
+            return DateOfBirth.AddYears(18) <= DateTime.Now;
+        }
     }
 }

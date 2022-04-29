@@ -21,7 +21,8 @@ namespace DvD_Api.Models
         
         
         public string LoanTypeName { get; set; }
-        public int? Duration { get; set; }
+        [Required]
+        public int Duration { get; set; }
 
         [InverseProperty("TypeNumberNavigation")]
         [JsonIgnore]

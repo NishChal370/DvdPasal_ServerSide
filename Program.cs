@@ -1,3 +1,4 @@
+using DvD_Api;
 using DvD_Api.Data;
 using DvD_Api.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -64,7 +65,8 @@ using (var scope = scopeFactory.CreateScope())
     var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
     if (db.Database.EnsureCreated())
     {
-        // TODO seed data and create a super admin.
+        SeedData seedData = new SeedData();
+        await seedData.CreateSuperAdmin(scope.ServiceProvider);
     }
 }
 
