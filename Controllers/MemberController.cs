@@ -119,7 +119,33 @@ namespace DvD_Api.Controllers
 
         }
 
+        [HttpGet("memberWithLoans")]
+        public IEnumerable<object> GetMemberWithLoans() { 
+            return _db.Members
+                .Include(m => m.CategoryNumberNavigation)
+                .Include(m => m.Loans)
+                .OrderBy(m => m.FirstName)
+                .Select(m => new { 
+                   FirstName = m.FirstName,
+                   LastName = m.LastName,
+                   MembershipCategory = m.CategoryNumberNavigation.Description,
+                   DateOfBirth = m.DateOfBirth,
+                   LimitStatus = m.Loans.Where(l => l.DateReturned == null).Count() > m.CategoryNumberNavigation.TotalLoans ? "Limit Crossed" : "Ok",
+                   TotalLoans = m.Loans.Count,
+                   CurrentLoanCount = m.Loans.Where(l => l.DateReturned == null).Count()
+                }).ToList().GroupBy(m => m.FirstName.ToLower()[0])
+                .Select(d => new { 
+                    Alphabate = d.Key,
+                    MemberList = d
+                });
+            
+        }
 
+        // FIXME Does not work.
+        [HttpGet("nonActive")]
+        public IEnumerable<object> GetInactiveMembers() {
+            return _db.Members.Include(m => m.Loans).Where(m => m.Loans.OrderBy(l => l.DateOut).LastOrDefault().DateOut.AddDays(31) < DateTime.Now );
+        }
 
 
     }
