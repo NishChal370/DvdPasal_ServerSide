@@ -61,8 +61,15 @@ namespace DvD_Api.Controllers
                     await _db.LoanTypes.AddAsync(loanType);
                     await _db.SaveChangesAsync();
                 }
+                else {
+                    loanType = _db.LoanTypes.Where(t => t.LoanTypeNumber == loanType.LoanTypeNumber).FirstOrDefault();
+                    if (loanType == null)
+                    {
+                        return BadRequest($"Loan Type with id {loanType.LoanTypeNumber} does not exist.");
+                    }
+                }
 
-                _db.Loans.Add(new Loan
+                var mLoan = new Loan
                 {
                     LoanNumber = 0,
                     CopyNumber = loan.CopyNumber,
@@ -70,18 +77,21 @@ namespace DvD_Api.Controllers
                     DateOut = loan.DateOut,
                     DateDue = loan.DateOut.AddDays(loanType.Duration),
                     TypeNumber = loanType.LoanTypeNumber
-                });
+                };
+
+                _db.Loans.Add(mLoan);
 
                 await _db.SaveChangesAsync();
                 await transaction.CommitAsync();
 
                 return Ok(new
                 {
-
+                    LoanId = mLoan.LoanNumber,
                     DvdTitle = dvdTitle.DvdName,
+                    StandardPrice = dvdTitle.StandardCharge,
                     MemberName = $"{member.FirstName} {member.LastName}",
                     DateOut = loan.DateOut,
-                    DateDue = loan.DateOut.AddDays(loanType.Duration),
+                    DateDue = mLoan.DateDue,
                     LoanType = loanType.LoanTypeName
                 });
             }
@@ -177,6 +187,8 @@ namespace DvD_Api.Controllers
                 totalCharge = totalCharge,
             });
         }
+
+
 
         [HttpPost("searchMember")]
         public IEnumerable<Loan> SearchMembers(MemberSearchDto memberSearch)

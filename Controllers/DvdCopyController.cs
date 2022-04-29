@@ -26,13 +26,16 @@ namespace DvD_Api.Controllers
                 return BadRequest($"Dvd with id {dvdCopy.DvdId} does not exist");
             }
 
-            await _db.Dvdcopies.AddAsync(new Dvdcopy { 
+            var mCopy = new Dvdcopy
+            {
                 CopyNumber = 0,
                 Dvdnumber = dvdCopy.DvdId,
                 DatePurchased = dvdCopy.DatePurchased,
-            });
+            };
+
+            await _db.Dvdcopies.AddAsync(mCopy);
             await _db.SaveChangesAsync();
-            return Ok($"Added new copy successfully.");
+            return Ok($"Added new copy with id {mCopy.CopyNumber}.");
         }
 
         [HttpGet]
@@ -46,12 +49,13 @@ namespace DvD_Api.Controllers
                     datePurchased = c.DatePurchased.ToString("d"),
                     dvdId = c.Dvdnumber,
                     dvdTitle = c.DvdnumberNavigation.DvdName
-                    
+
                 });
         }
 
         [HttpGet("available")]
-        public IEnumerable<Dvdcopy> GetAvailableCopy() {
+        public IEnumerable<Dvdcopy> GetAvailableCopy()
+        {
             return _db.Dvdcopies
                 .Include(c => c.Loans)
                 .Where(c => c.Loans.Count() < 1 || c.Loans.All(l => l.DateReturned != null));
@@ -59,7 +63,8 @@ namespace DvD_Api.Controllers
 
 
         [HttpGet("old")]
-        public IEnumerable<Dvdcopy> GetOldCopies() {
+        public IEnumerable<Dvdcopy> GetOldCopies()
+        {
             return _db.Dvdcopies.Where(c => c.DatePurchased.AddDays(365) < DateTime.Now);
         }
 
@@ -67,11 +72,13 @@ namespace DvD_Api.Controllers
         public object GetCopyById(int copyId)
         {
             var mCopy = _db.Dvdcopies.FirstOrDefault(c => c.CopyNumber == copyId);
-            if (mCopy == null) { 
+            if (mCopy == null)
+            {
                 return NoContent();
             }
 
-            return new {
+            return new
+            {
                 copyId = mCopy.CopyNumber,
                 datePurchased = mCopy.DatePurchased.ToString("d"),
                 dvdId = mCopy.Dvdnumber,
@@ -93,5 +100,26 @@ namespace DvD_Api.Controllers
             await _db.SaveChangesAsync();
             return Ok();
         }
+
+
+        [HttpGet("lastLoan/{copyId}")]
+        public object GetLastLoan(int copyId)
+        {
+            var lastLoan = _db.Loans
+                .Include(l => l.MemberNumberNavigation)
+                .Include(l => l.CopyNumberNavigation.DvdnumberNavigation)
+                .OrderBy(l => l.DateOut).Where(l => l.CopyNumber == copyId)
+                .LastOrDefault();
+
+            return lastLoan == null ? lastLoan : new { 
+                DvDTitle = lastLoan.CopyNumberNavigation.DvdnumberNavigation.DvdName,
+                DvDId = lastLoan.CopyNumberNavigation.Dvdnumber,
+                LoanedBy = $"{lastLoan.MemberNumberNavigation.FirstName} {lastLoan.MemberNumberNavigation.LastName}",
+                DateOut = lastLoan.DateOut.ToString("d"),
+                DateDue = lastLoan.DateDue.ToString("d"),
+                DateReturned = lastLoan.DateReturned != null ? lastLoan.DateReturned.Value.ToString("d") : "Not Returned",
+            };
+        }
+
     }
 }

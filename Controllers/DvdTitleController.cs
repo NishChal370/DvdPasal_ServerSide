@@ -1,4 +1,5 @@
 ﻿using DvD_Api.Data;
+using DvD_Api.DTO;
 using DvD_Api.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -18,82 +19,82 @@ namespace DvD_Api.Controllers
 
 
         [HttpPost]
-        public async Task<IActionResult> AddDvdTitle(Dvdtitle dvdTitle)
+        public async Task<IActionResult> AddDvdTitle(AddTitleDto dvdTitle)
         {
-            if (dvdTitle.DvdNumber == 0)
+
+            using var transaction = _db.Database.BeginTransaction();
+
+            try
             {
-
-                using var transaction = _db.Database.BeginTransaction();
-
-                try
+                var dvdProducer = dvdTitle.DvdProducer;
+                if (dvdProducer.ProducerNumber == 0)
                 {
-                    var dvdProducer = dvdTitle.ProducerNumberNavigation;
-                    if (dvdProducer.ProducerNumber == 0)
-                    {
-                        await _db.Producers.AddAsync(dvdProducer);
-                        await _db.SaveChangesAsync();
-                    }
-
-                    dvdTitle.ProducerNumberNavigation = null;
-                    dvdTitle.ProducerNumber = dvdProducer.ProducerNumber;
-
-                    var dvdStudio = dvdTitle.StudioNumberNavigation;
-
-                    if (dvdStudio.StudioNumber == 0)
-                    {
-                        await _db.Studios.AddAsync(dvdStudio);
-                        await _db.SaveChangesAsync();
-                    }
-
-                    dvdTitle.StudioNumber = dvdStudio.StudioNumber;
-                    dvdTitle.StudioNumberNavigation = null;
-
-                    var dvdCategory = dvdTitle.CategoryNumberNavigation;
-                    if (dvdCategory.CategoryNumber == 0)
-                    {
-                        await _db.Dvdcategories.AddAsync(dvdCategory);
-                        await _db.SaveChangesAsync();
-                    }
-
-                    dvdTitle.CategoryNumber = dvdCategory.CategoryNumber;
-                    dvdTitle.CategoryNumberNavigation = null;
-
-                    var actorsList = dvdTitle.ActorNumbers;
-                    var actorIdList = new List<int>();
-
-                    foreach (var actor in actorsList)
-                    {
-                        var mActor = actor;
-                        if (mActor.ActorNumber == 0)
-                        {
-                            await _db.Actors.AddAsync(mActor);
-                            await _db.SaveChangesAsync();
-                        }
-                        actorIdList.Add(mActor.ActorNumber);
-                    }
-
-                    dvdTitle.ActorNumbers = _db.Actors.Where(a => actorIdList.Contains(a.ActorNumber)).ToList();
-
-                    _db.Dvdtitles.Add(dvdTitle);
-
+                    await _db.Producers.AddAsync(dvdProducer);
                     await _db.SaveChangesAsync();
-                    await transaction.CommitAsync();
-
-                    return Ok($"Added new DvD with id {dvdTitle.DvdNumber}");
                 }
-                catch (Exception)
+
+                var dvdStudio = dvdTitle.DvdStudio;
+
+                if (dvdStudio.StudioNumber == 0)
                 {
-                    return StatusCode(StatusCodes.Status500InternalServerError, "Could not add DvD. Contact Admin!");
-
+                    await _db.Studios.AddAsync(dvdStudio);
+                    await _db.SaveChangesAsync();
                 }
+
+                var dvdCategory = dvdTitle.Dvdcategory;
+                if (dvdCategory.CategoryNumber == 0)
+                {
+                    await _db.Dvdcategories.AddAsync(dvdCategory);
+                    await _db.SaveChangesAsync();
+                }
+
+                var actorsList = dvdTitle.Actors;
+                var actorIdList = new List<int>();
+
+                foreach (var actor in actorsList)
+                {
+                    var mActor = actor;
+                    if (mActor.ActorNumber == 0)
+                    {
+                        await _db.Actors.AddAsync(mActor);
+                        await _db.SaveChangesAsync();
+                    }
+                    actorIdList.Add(mActor.ActorNumber);
+                }
+
+                Dvdtitle mDvd = new Dvdtitle
+                {
+                    DvdNumber = 0,
+                    DvdName = dvdTitle.DvDName,
+                    DateReleased = dvdTitle.DateReleased,
+                    StandardCharge = dvdTitle.StandardCharge,
+                    PenaltyCharge = dvdTitle.PenaltyCharge,
+                    StudioNumber = dvdStudio.StudioNumber,
+                    ProducerNumber = dvdProducer.ProducerNumber,
+                    CategoryNumber = dvdCategory.CategoryNumber,
+                    DvDimages = dvdTitle.DvDImages,
+                    ActorNumbers = _db.Actors.Where(a => actorIdList.Contains(a.ActorNumber)).ToList()
+                };
+
+                _db.Dvdtitles.Add(mDvd);
+
+                await _db.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                return Ok($"Added new DvD with id {mDvd.DvdNumber}");
+            }
+            catch (Exception)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, "Could not add DvD. Contact Admin!");
+
             }
 
-            return BadRequest();
         }
 
 
         [HttpGet]
-        public List<Dvdtitle> GetAllDvd() {
+        public List<Dvdtitle> GetAllDvd()
+        {
             return _db.Dvdtitles
                 .Include(d => d.DvDimages)
                 .Include(d => d.ActorNumbers)
@@ -102,8 +103,19 @@ namespace DvD_Api.Controllers
                 .Include(d => d.StudioNumberNavigation).ToList();
         }
 
+        [HttpGet("details")]
+        public IEnumerable<Dvdtitle> GetDvdDetails()
+        {
+            return _db.Dvdtitles.Include(d => d.DvDimages)
+                .Include(d => d.ActorNumbers.OrderBy(a => a.ActorLastName))
+                .Include(d => d.CategoryNumberNavigation)
+                .Include(d => d.ProducerNumberNavigation)
+                .Include(d => d.StudioNumberNavigation).OrderBy(d => d.DateReleased);
+        }
+
         [HttpGet("byId/{dvdId}")]
-        public async Task<Dvdtitle> GetTitleById(int dvdId) {
+        public async Task<Dvdtitle> GetTitleById(int dvdId)
+        {
             return await _db.Dvdtitles
                 .Include(d => d.DvDimages)
                 .Include(d => d.ActorNumbers)
@@ -113,7 +125,8 @@ namespace DvD_Api.Controllers
         }
 
         [HttpGet("byLastName/{lastName}")]
-        public IEnumerable<Dvdtitle> GetTitlesByLastName(string lastName) {
+        public IEnumerable<Dvdtitle> GetTitlesByLastName(string lastName)
+        {
             return _db.Dvdtitles
                     .Include(d => d.DvDimages)
                 .Include(d => d.ActorNumbers)
@@ -141,7 +154,8 @@ namespace DvD_Api.Controllers
         }
 
         [HttpGet("unpopular")]
-        public IEnumerable<Dvdtitle> GetUnpopularTitles() {
+        public IEnumerable<Dvdtitle> GetUnpopularTitles()
+        {
 
             // Get all the dvd copies that were not in loan for 31 days or have never been loaned. 
             var unpopularCopies = _db.Dvdcopies.
@@ -156,9 +170,11 @@ namespace DvD_Api.Controllers
         }
 
         [HttpDelete]
-        public async Task<IActionResult> DeleteDvd(int id) {
+        public async Task<IActionResult> DeleteDvd(int id)
+        {
             var dvdExists = await _db.Dvdtitles.FirstOrDefaultAsync(d => d.DvdNumber == id);
-            if (dvdExists == null) {
+            if (dvdExists == null)
+            {
                 return NotFound();
             }
 
