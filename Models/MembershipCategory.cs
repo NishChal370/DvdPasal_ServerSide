@@ -20,7 +20,7 @@ namespace DvD_Api.Models
         
         public string Description { get; set; }
 
-        [Required]
+        [Required(ErrorMessage = "Total loans is required.")]
         [Range(1, 30, ErrorMessage = "Total loans should be more than one and less than 30")]
         public int TotalLoans { get; set; }
 

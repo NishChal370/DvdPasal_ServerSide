@@ -17,8 +17,8 @@ namespace DvD_Api.Models
 
         [Key]
         public int ProducerNumber { get; set; }
-        [Required]
-        [StringLength(75)]
+        [Required(ErrorMessage = "Producer name is required")]
+        [StringLength(75, ErrorMessage = "Producer name must be shorter than 75 characters.")]
         
         public string ProducerName { get; set; }
 

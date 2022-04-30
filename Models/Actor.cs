@@ -17,12 +17,12 @@ namespace DvD_Api.Models
 
         [Key]
         public int ActorNumber { get; set; }
-        [Required]
-        [StringLength(50)]
+        [Required(ErrorMessage = "Actor first name is required")]
+        [StringLength(50, ErrorMessage = "Actor first name cannot be more than 50 characters.")]
         
         public string ActorName { get; set; }
-        [Required]
-        [StringLength(50)]
+        [Required(ErrorMessage = "Actor last name is required.")]
+        [StringLength(50, ErrorMessage = "Actor last name cannot be more than 50 characters.")]
         
         public string ActorLastName { get; set; }
         

@@ -19,7 +19,9 @@ namespace DvD_Api.Models
 
         [Key]
         public int DvdNumber { get; set; }
-        [StringLength(100)]
+        
+
+        [StringLength(100, ErrorMessage = "DvD name should be 100 characters or less.")]
         
         public string DvdName { get; set; }
 

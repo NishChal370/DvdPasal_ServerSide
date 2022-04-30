@@ -17,7 +17,7 @@ namespace DvD_Api.Models
 
         [Key]
         public int StudioNumber { get; set; }
-        [Required]
+        [Required(ErrorMessage = "Studio name is required.")]
         
         
         public string StudioName { get; set; }

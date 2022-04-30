@@ -17,11 +17,11 @@ namespace DvD_Api.Models
 
         [Key]
         public int LoanTypeNumber { get; set; }
-        [Required]
+        [Required(ErrorMessage = "Loan type name is required.")]
         
         
         public string LoanTypeName { get; set; }
-        [Required]
+        [Required(ErrorMessage = "Loan duration name is required.")]
         public int Duration { get; set; }
 
         [InverseProperty("TypeNumberNavigation")]
