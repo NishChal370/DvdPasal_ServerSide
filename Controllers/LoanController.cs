@@ -97,9 +97,18 @@ namespace DvD_Api.Controllers
         }
 
         [HttpGet]
-        public IEnumerable<Loan> GetAllLoans()
+        public IEnumerable<object> GetAllLoans()
         {
-            return _db.Loans;
+            return _db.Loans.Select(l => new
+            {
+                LoanId = l.LoanNumber,
+                DvDName = l.CopyNumberNavigation.DvdnumberNavigation.DvdName,
+                DateOut = l.DateOut.ToString("d"),
+                DateDue = l.DateDue.ToString("d"),
+                DateReturn = l.DateReturned.Value.ToString("d") ?? "Not Returned",
+                CopyId = l.CopyNumber,
+                MemberName = $"{l.MemberNumberNavigation.FirstName} {l.MemberNumberNavigation.LastName}"
+            }) ;
         }
 
         [HttpGet("notReturned")]
