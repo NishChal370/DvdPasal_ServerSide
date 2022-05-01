@@ -95,6 +95,7 @@ namespace DvD_Api.Controllers
 
         //[HttpPost]
         //[Route("changePassword")]
+        //public IActionResult
 
         private JwtSecurityToken GetToken(List<Claim> authClaims)
         {
