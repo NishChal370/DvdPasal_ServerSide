@@ -198,7 +198,7 @@ namespace DvD_Api.Controllers
                     Address = o.Address,
                     RecentDvdTitle = o.Loans.OrderBy(l => l.DateOut).LastOrDefault().CopyNumberNavigation.DvdnumberNavigation.DvdName,
                     DaysSinceLoan = (DateTime.Now - o.Loans.OrderBy(l => l.DateOut).LastOrDefault().DateOut).Days,
-                    DateOut = o.Loans.OrderBy(l => l.DateOut).LastOrDefault().DateOut,
+                    DateOut = o.Loans.OrderBy(l => l.DateOut).LastOrDefault().DateOut.ToString("d"),
                     MemberImage = o.ProfileImage64
                 });
         }
