@@ -184,19 +184,26 @@ namespace DvD_Api.Controllers
         }
 
         [HttpGet("unpopular")]
-        public IEnumerable<Dvdtitle> GetUnpopularTitles()
+        public IEnumerable<object> GetUnpopularTitles()
         {
 
             // Get all the dvd copies that were not in loan for 31 days or have never been loaned. 
             var unpopularCopies = _db.Dvdcopies.
                 Include(c => c.Loans)
                 .Include(c => c.DvdnumberNavigation)
+                .Include(c => c.DvdnumberNavigation.StudioNumberNavigation)
                 .Where(c => c.Loans.OrderBy(l => l.DateOut).LastOrDefault().DateOut.AddDays(31) < DateTime.Now || c.Loans.Count < 1);
 
             // Only get the dvd title if there were no copies in loan.
             var unpopularDvDTitles = _db.Dvdtitles.Include(d => d.Dvdcopies).Where(d => d.Dvdcopies.Count == unpopularCopies.Where(c => c.Dvdnumber == d.DvdNumber).Count());
 
-            return unpopularDvDTitles;
+            return unpopularDvDTitles.Select(x => new { 
+                DvDName = x.DvdName,
+                DateReleased = x.DateReleased.ToString("d"),
+                NumCopies = x.Dvdcopies.Count(),
+                Price = x.StandardCharge,
+                Studio = x.StudioNumberNavigation.StudioName
+            });
         }
 
 
