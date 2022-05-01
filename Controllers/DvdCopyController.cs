@@ -26,16 +26,21 @@ namespace DvD_Api.Controllers
                 return BadRequest($"Dvd with id {dvdCopy.DvdId} does not exist");
             }
 
-            var mCopy = new Dvdcopy
+            for (int i = 0; i < dvdCopy.DvdCount; i++)
             {
-                CopyNumber = 0,
-                Dvdnumber = dvdCopy.DvdId,
-                DatePurchased = dvdCopy.DatePurchased,
-            };
 
-            await _db.Dvdcopies.AddAsync(mCopy);
+                var mCopy = new Dvdcopy
+                {
+                    CopyNumber = 0,
+                    Dvdnumber = dvdCopy.DvdId,
+                    DatePurchased = dvdCopy.DatePurchased,
+                };
+
+                await _db.Dvdcopies.AddAsync(mCopy);
+            }
+            
             await _db.SaveChangesAsync();
-            return Ok($"Added new copy with id {mCopy.CopyNumber}.");
+            return Ok($"Added {dvdCopy.DvdCount} copies of dvd id {dvdCopy.DvdId}.");
         }
 
         [HttpGet]
@@ -99,6 +104,17 @@ namespace DvD_Api.Controllers
             _db.Dvdcopies.Remove(copyExists);
             await _db.SaveChangesAsync();
             return Ok();
+        }
+
+        [HttpGet("forLoan")]
+        public IEnumerable<object> GetCopyForLoan() { 
+            return _db.Dvdcopies.Include(c => c.DvdnumberNavigation).ThenInclude(c => c.DvDimages).Include(c => c.Loans)
+                .Where(c => c.Loans.Count() < 1 || c.Loans.All(l => l.DateReturned != null)).ToList()
+                .DistinctBy(c => c.Dvdnumber).Select(c => new { 
+                    DvdTitle = c.DvdnumberNavigation.DvdName,
+                    CopyId = c.CopyNumber,
+                    DvdImage = c.DvdnumberNavigation.DvDimages.FirstOrDefault().Image64
+                });
         }
 
 

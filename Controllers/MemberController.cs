@@ -84,6 +84,15 @@ namespace DvD_Api.Controllers
                 .ToListAsync();
         }
 
+        [HttpGet("forLoan")]
+        public IEnumerable<object> GetMemberForLoan() {
+            return _db.Members.Select(m => new { 
+                MemberId = m.MemberNumber,
+                MemberName = $"{m.FirstName} {m.LastName}",
+                IsOfAge = m.IsOldEnough()
+            });
+        }
+
         [HttpPut]
         public async Task<IActionResult> UpdateMember(int memberId, Member member)
         {
