@@ -108,7 +108,7 @@ namespace DvD_Api.Controllers
                 DateReturn = l.DateReturned.Value.ToString("d") ?? "Not Returned",
                 CopyId = l.CopyNumber,
                 MemberName = $"{l.MemberNumberNavigation.FirstName} {l.MemberNumberNavigation.LastName}"
-            }) ;
+            });
         }
 
         [HttpGet("notReturned")]
@@ -119,15 +119,20 @@ namespace DvD_Api.Controllers
                 .Include(l => l.MemberNumberNavigation)
                 .Include(l => l.TypeNumberNavigation)
                 .Where(l => l.DateReturned == null)
+                .GroupBy(l => l.DateOut)
                 .Select(x => new
                 {
-                    LoanId = x.LoanNumber,
-                    copyId = x.CopyNumber,
-                    DvdTitle = x.CopyNumberNavigation.DvdnumberNavigation.DvdName,
-                    MemberName = $"{x.MemberNumberNavigation.FirstName} {x.MemberNumberNavigation.LastName}",
-                    DateOut = x.DateOut,
-                    DateDue = x.DateDue,
-                    LoanType = x.TypeNumberNavigation.LoanTypeName
+                    DateOut = x.Key.ToString("d"),
+                    LoanData = x.OrderBy(v => v.CopyNumberNavigation.DvdnumberNavigation.DvdName).Select(x => new
+                    {
+                        LoanId = x.LoanNumber,
+                        copyId = x.CopyNumber,
+                        DvdTitle = x.CopyNumberNavigation.DvdnumberNavigation.DvdName,
+                        MemberName = $"{x.MemberNumberNavigation.FirstName} {x.MemberNumberNavigation.LastName}",
+                        DateOut = x.DateOut.ToString("d"),
+                        DateDue = x.DateDue.ToString("d"),
+                        TotalLoans = x.CopyNumberNavigation.Loans.Count()
+                    })
                 });
         }
 
