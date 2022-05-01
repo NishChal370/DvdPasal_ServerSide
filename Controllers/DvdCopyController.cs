@@ -71,9 +71,15 @@ namespace DvD_Api.Controllers
 
 
         [HttpGet("old")]
-        public IEnumerable<Dvdcopy> GetOldCopies()
+        public IEnumerable<object> GetOldCopies()
         {
-            return _db.Dvdcopies.Where(c => c.DatePurchased.AddDays(365) < DateTime.Now);
+            return _db.Dvdcopies.Include(d => d.DvdnumberNavigation).Where(c => c.DatePurchased.AddDays(365) < DateTime.Now).Select(c => new {
+                DvdName = c.DvdnumberNavigation.DvdName,
+                DatePurchase = c.DatePurchased.ToString("d"),
+                CopyId = c.CopyNumber,
+                TotalLoans = c.Loans.Count(),
+                Price = c.DvdnumberNavigation.StandardCharge
+            });
         }
 
         [HttpDelete("deleteAllOld")]
