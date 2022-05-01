@@ -10,7 +10,7 @@ namespace DvD_Api.DTO
         [Required(ErrorMessage = "Member id is required")]
         public int MemberNumber { get; set; }
         [Required(ErrorMessage = "Loan type is required")]
-        public LoanType LoanType{ get; set; }
+        public int LoanTypeId{ get; set; }
         [Required(ErrorMessage = "Date Out is required")]
         public DateTime DateOut{ get; set; }
 

@@ -48,25 +48,20 @@ namespace DvD_Api.Controllers
                 return BadRequest($"Member with id {loan.MemberNumber} does not exist");
             }
 
-            if (dvdTitle.CategoryNumberNavigation.AgeRestricted && !member.IsOldEnough()) {
+            if (dvdTitle.CategoryNumberNavigation.AgeRestricted && !member.IsOldEnough())
+            {
                 return BadRequest($"Member with id {member.MemberNumber} is too young for this movie.");
             }
 
             using var transaction = _db.Database.BeginTransaction();
             try
             {
-                var loanType = loan.LoanType;
-                if (loanType.LoanTypeNumber == 0)
+
+                var loanType = _db.LoanTypes.Where(t => t.LoanTypeNumber == loan.LoanTypeId).FirstOrDefault();
+                if (loanType == null)
                 {
-                    await _db.LoanTypes.AddAsync(loanType);
-                    await _db.SaveChangesAsync();
-                }
-                else {
-                    loanType = _db.LoanTypes.Where(t => t.LoanTypeNumber == loanType.LoanTypeNumber).FirstOrDefault();
-                    if (loanType == null)
-                    {
-                        return BadRequest($"Loan Type with id {loanType.LoanTypeNumber} does not exist.");
-                    }
+                    return BadRequest($"Loan Type with id {loanType.LoanTypeNumber} does not exist.");
+
                 }
 
                 var mLoan = new Loan
@@ -128,9 +123,11 @@ namespace DvD_Api.Controllers
         }
 
         [HttpDelete]
-        public IActionResult DeleteLoan(int loanId) { 
+        public IActionResult DeleteLoan(int loanId)
+        {
             var loanExists = _db.Loans.Where(l => l.LoanNumber == loanId).FirstOrDefault();
-            if (loanExists == null) { 
+            if (loanExists == null)
+            {
                 return NotFound();
             }
 
