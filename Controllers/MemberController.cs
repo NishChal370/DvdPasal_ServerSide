@@ -3,6 +3,8 @@ using DvD_Api.DTO;
 using DvD_Api.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using SkiaSharp;
+using System.Text;
 
 namespace DvD_Api.Controllers
 {
@@ -34,6 +36,28 @@ namespace DvD_Api.Controllers
                     await _db.SaveChangesAsync();
                 }
 
+                if (!string.IsNullOrWhiteSpace(member.ProfileImage))
+                {
+                    try
+                    {
+
+                        SKBitmap imageBitmap = GetBitmap(member.ProfileImage);
+                        SKPixmap pixMap = imageBitmap.PeekPixels();
+
+                        var options = new SKWebpEncoderOptions(SKWebpEncoderCompression.Lossy, 50);
+                        SKData data = pixMap.Encode(options); 
+
+                        var base64String = "data:image/webp;base64," + ConvertToBase64(data.AsStream());
+                        member.ProfileImage = base64String;
+
+                    }
+                    catch (Exception)
+                    {
+
+                        Console.WriteLine("Not a valid base64 ");
+                    }
+                }
+
                 var nMember = new Member
                 {
                     MemberNumber = 0,
@@ -57,6 +81,30 @@ namespace DvD_Api.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError, "Could not add member. Contact Admin!");
             }
 
+        }
+
+        // TODO add to extension methods.
+        private string ConvertToBase64(Stream stream)
+        {
+            byte[] bytes;
+            using (var memoryStream = new MemoryStream())
+            {
+                stream.CopyTo(memoryStream);
+                bytes = memoryStream.ToArray();
+            }
+
+            return Convert.ToBase64String(bytes);
+        }
+
+        private SKBitmap GetBitmap(string base64String)
+        {
+            SKBitmap sBitmap;
+            byte[] byteBuffer = Convert.FromBase64String(base64String);
+            using (var memoryStream = new MemoryStream(byteBuffer)) {
+                 sBitmap = SKBitmap.Decode(memoryStream);
+            }       
+
+            return sBitmap;
         }
 
         [HttpGet]
@@ -85,8 +133,10 @@ namespace DvD_Api.Controllers
         }
 
         [HttpGet("forLoan")]
-        public IEnumerable<object> GetMemberForLoan() {
-            return _db.Members.Select(m => new { 
+        public IEnumerable<object> GetMemberForLoan()
+        {
+            return _db.Members.Select(m => new
+            {
                 MemberId = m.MemberNumber,
                 MemberName = $"{m.FirstName} {m.LastName}",
                 IsOfAge = m.IsOldEnough()

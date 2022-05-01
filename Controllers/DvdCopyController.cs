@@ -3,6 +3,7 @@ using DvD_Api.DTO;
 using DvD_Api.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Drawing;
 
 namespace DvD_Api.Controllers
 {
@@ -58,6 +59,8 @@ namespace DvD_Api.Controllers
                 });
         }
 
+
+
         [HttpGet("available")]
         public IEnumerable<Dvdcopy> GetAvailableCopy()
         {
@@ -108,10 +111,14 @@ namespace DvD_Api.Controllers
 
         [HttpGet("forLoan")]
         public IEnumerable<object> GetCopyForLoan() { 
-            return _db.Dvdcopies.Include(c => c.DvdnumberNavigation).ThenInclude(c => c.DvDimages).Include(c => c.Loans)
+            return _db.Dvdcopies.Include(c => c.DvdnumberNavigation).ThenInclude(c => c.DvDimages)
+                .Include(c => c.DvdnumberNavigation.CategoryNumberNavigation).Include(c => c.Loans)
                 .Where(c => c.Loans.Count() < 1 || c.Loans.All(l => l.DateReturned != null)).ToList()
                 .DistinctBy(c => c.Dvdnumber).Select(c => new { 
                     DvdTitle = c.DvdnumberNavigation.DvdName,
+                    Price = c.DvdnumberNavigation.StandardCharge,
+                    AgeRestricted = c.DvdnumberNavigation.CategoryNumberNavigation.AgeRestricted,
+                    Category = c.DvdnumberNavigation.CategoryNumberNavigation.CategoryDescription,
                     CopyId = c.CopyNumber,
                     DvdImage = c.DvdnumberNavigation.DvDimages.FirstOrDefault().Image64
                 });
