@@ -39,7 +39,7 @@ namespace DvD_Api.Controllers
 
                 await _db.Dvdcopies.AddAsync(mCopy);
             }
-            
+
             await _db.SaveChangesAsync();
             return Ok($"Added {dvdCopy.DvdCount} copies of dvd id {dvdCopy.DvdId}.");
         }
@@ -76,6 +76,18 @@ namespace DvD_Api.Controllers
             return _db.Dvdcopies.Where(c => c.DatePurchased.AddDays(365) < DateTime.Now);
         }
 
+        [HttpDelete("deleteAllOld")]
+        public async Task<IActionResult> DeleteAllOld()
+        {
+            var oldCopies = _db.Dvdcopies.Where(c => c.DatePurchased.AddDays(365) < DateTime.Now);
+            var totalOld = oldCopies.Count();
+
+            _db.Dvdcopies.RemoveRange(oldCopies);
+            await _db.SaveChangesAsync();
+
+            return Ok($"Deleted {totalOld} copies form database.");
+        }
+
         [HttpGet("{copyId}")]
         public object GetCopyById(int copyId)
         {
@@ -110,11 +122,13 @@ namespace DvD_Api.Controllers
         }
 
         [HttpGet("forLoan")]
-        public IEnumerable<object> GetCopyForLoan() { 
+        public IEnumerable<object> GetCopyForLoan()
+        {
             return _db.Dvdcopies.Include(c => c.DvdnumberNavigation).ThenInclude(c => c.DvDimages)
                 .Include(c => c.DvdnumberNavigation.CategoryNumberNavigation).Include(c => c.Loans)
                 .Where(c => c.Loans.Count() < 1 || c.Loans.All(l => l.DateReturned != null)).ToList()
-                .DistinctBy(c => c.Dvdnumber).Select(c => new { 
+                .DistinctBy(c => c.Dvdnumber).Select(c => new
+                {
                     DvdTitle = c.DvdnumberNavigation.DvdName,
                     Price = c.DvdnumberNavigation.StandardCharge,
                     AgeRestricted = c.DvdnumberNavigation.CategoryNumberNavigation.AgeRestricted,
@@ -134,7 +148,8 @@ namespace DvD_Api.Controllers
                 .OrderBy(l => l.DateOut).Where(l => l.CopyNumber == copyId)
                 .LastOrDefault();
 
-            return lastLoan == null ? lastLoan : new { 
+            return lastLoan == null ? lastLoan : new
+            {
                 DvDTitle = lastLoan.CopyNumberNavigation.DvdnumberNavigation.DvdName,
                 DvDId = lastLoan.CopyNumberNavigation.Dvdnumber,
                 LoanedBy = $"{lastLoan.MemberNumberNavigation.FirstName} {lastLoan.MemberNumberNavigation.LastName}",
