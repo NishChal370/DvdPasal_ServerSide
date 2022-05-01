@@ -1,5 +1,7 @@
 ﻿using DvD_Api.Data;
+using DvD_Api.DTO;
 using DvD_Api.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
@@ -31,25 +33,30 @@ namespace DvD_Api.Controllers
 
         [HttpPost]
         [Route("login")]
-        public async Task<IActionResult> Login(LoginModel loginModel) { 
+        public async Task<IActionResult> Login(LoginModel loginModel)
+        {
             var user = await _userManager.FindByNameAsync(loginModel.Username);
-            if (user != null && await _userManager.CheckPasswordAsync(user, loginModel.Password)) {
-                
+            if (user != null && await _userManager.CheckPasswordAsync(user, loginModel.Password))
+            {
+
                 var userRoles = await _userManager.GetRolesAsync(user);
 
-                var authClaims = new List<Claim> { 
+                var authClaims = new List<Claim> {
                     new Claim(ClaimTypes.Name, user.UserName),
                     new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
                 };
 
-                foreach (var role in userRoles) {
+                foreach (var role in userRoles)
+                {
                     authClaims.Add(new Claim(ClaimTypes.Role, role));
                 }
 
                 var token = GetToken(authClaims);
 
-                return Ok(new { 
+                return Ok(new
+                {
                     token = new JwtSecurityTokenHandler().WriteToken(token),
+                    userName = user.UserName,   
                     expiration = token.ValidTo
                 });
             }
@@ -93,10 +100,45 @@ namespace DvD_Api.Controllers
             return Ok("User created successfully.");
         }
 
-        //[HttpPost]
-        //[Route("changePassword")]
-        //public IActionResult
+        [HttpPost]
+        [Authorize(Roles = UserRoles.ADMIN)]
+        [Route("changePasswordAdmin")]
+        public async Task<IActionResult> ChangePasswordAdmin(PasswordChangeDto passwordChange)
+        {
+            var user = await _userManager.FindByIdAsync(passwordChange.UserId);
+            if (user == null)
+            {
+                return NotFound("User not found!");
+            }
 
+            var passwordHash = _userManager.PasswordHasher.HashPassword(user, passwordChange.NewPassword);
+            user.PasswordHash = passwordHash;
+
+            await _userManager.UpdateAsync(user);
+
+            return Ok("Password changed successfully");
+        }
+
+        [HttpPost]
+        [Route("changeUserPassword")]
+        public async Task<IActionResult> ChangeUserPassword(UserPasswordDto passwordChange) {
+            // TODO decode bearer token and compare user.
+            var user = await _userManager.FindByIdAsync(passwordChange.UserId);
+            // TODO check if the user id belongs to the current user. 
+            if (user == null)
+            {
+                return NotFound("User not found!");
+            }
+
+            var passwordHash = _userManager.PasswordHasher.HashPassword(user, passwordChange.NewPassword);
+            user.PasswordHash = passwordHash;
+
+            await _userManager.UpdateAsync(user);
+
+            return Ok("Password changed successfully");
+        }
+
+        [HttpPost]
         private JwtSecurityToken GetToken(List<Claim> authClaims)
         {
             var authSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JWT:Secret"]));
