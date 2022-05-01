@@ -165,17 +165,18 @@ namespace DvD_Api.Controllers
                 .OrderBy(m => m.FirstName)
                 .Select(m => new
                 {
+                    MemberId = m.MemberNumber,
                     FirstName = m.FirstName,
                     LastName = m.LastName,
                     MembershipCategory = m.CategoryNumberNavigation.Description,
-                    DateOfBirth = m.DateOfBirth,
+                    DateOfBirth = m.DateOfBirth.ToString("d"),
                     LimitStatus = m.Loans.Where(l => l.DateReturned == null).Count() > m.CategoryNumberNavigation.TotalLoans ? "Limit Crossed" : "Ok",
                     TotalLoans = m.Loans.Count,
                     CurrentLoanCount = m.Loans.Where(l => l.DateReturned == null).Count()
                 }).ToList().GroupBy(m => m.FirstName.ToLower()[0])
                 .Select(d => new
                 {
-                    Alphabate = d.Key,
+                    Alphabet = d.Key,
                     MemberList = d
                 });
 
