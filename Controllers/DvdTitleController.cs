@@ -1,8 +1,10 @@
 ﻿using DvD_Api.Data;
 using DvD_Api.DTO;
+using DvD_Api.Extentions;
 using DvD_Api.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using SkiaSharp;
 
 namespace DvD_Api.Controllers
 {
@@ -62,6 +64,26 @@ namespace DvD_Api.Controllers
                     actorIdList.Add(mActor.ActorNumber);
                 }
 
+                var dvdImageList = new List<DvDimage>();
+                foreach (var image in dvdTitle.DvDImages) {
+
+                    SKBitmap imageBitmap = image.Image64.GetBitmap();
+                    SKPixmap pixMap = imageBitmap.PeekPixels();
+
+                    var options = new SKWebpEncoderOptions(SKWebpEncoderCompression.Lossy, 50);
+                    SKData data = pixMap.Encode(options);
+
+                    var base64String = "data:image/webp;base64," + data.AsStream().ConvertToBase64();
+
+
+                    var mDvdImage = new DvDimage { 
+                        DvDimageId = 0,
+                        Image64 = base64String,
+                    };
+
+                    dvdImageList.Add(mDvdImage);
+                }
+
                 Dvdtitle mDvd = new Dvdtitle
                 {
                     DvdNumber = 0,
@@ -72,7 +94,7 @@ namespace DvD_Api.Controllers
                     StudioNumber = dvdStudio.StudioNumber,
                     ProducerNumber = dvdProducer.ProducerNumber,
                     CategoryNumber = dvdCategory.CategoryNumber,
-                    DvDimages = dvdTitle.DvDImages,
+                    DvDimages = dvdImageList,
                     ActorNumbers = _db.Actors.Where(a => actorIdList.Contains(a.ActorNumber)).ToList()
                 };
 

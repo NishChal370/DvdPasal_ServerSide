@@ -1,5 +1,6 @@
 ﻿using DvD_Api.Data;
 using DvD_Api.DTO;
+using DvD_Api.Extentions;
 using DvD_Api.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -41,13 +42,13 @@ namespace DvD_Api.Controllers
                     try
                     {
 
-                        SKBitmap imageBitmap = GetBitmap(member.ProfileImage);
+                        SKBitmap imageBitmap = member.ProfileImage.GetBitmap();
                         SKPixmap pixMap = imageBitmap.PeekPixels();
 
                         var options = new SKWebpEncoderOptions(SKWebpEncoderCompression.Lossy, 50);
                         SKData data = pixMap.Encode(options); 
 
-                        var base64String = "data:image/webp;base64," + ConvertToBase64(data.AsStream());
+                        var base64String = "data:image/webp;base64," + data.AsStream().ConvertToBase64();
                         member.ProfileImage = base64String;
 
                     }
@@ -81,30 +82,6 @@ namespace DvD_Api.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError, "Could not add member. Contact Admin!");
             }
 
-        }
-
-        // TODO add to extension methods.
-        private string ConvertToBase64(Stream stream)
-        {
-            byte[] bytes;
-            using (var memoryStream = new MemoryStream())
-            {
-                stream.CopyTo(memoryStream);
-                bytes = memoryStream.ToArray();
-            }
-
-            return Convert.ToBase64String(bytes);
-        }
-
-        private SKBitmap GetBitmap(string base64String)
-        {
-            SKBitmap sBitmap;
-            byte[] byteBuffer = Convert.FromBase64String(base64String);
-            using (var memoryStream = new MemoryStream(byteBuffer)) {
-                 sBitmap = SKBitmap.Decode(memoryStream);
-            }       
-
-            return sBitmap;
         }
 
         [HttpGet]
