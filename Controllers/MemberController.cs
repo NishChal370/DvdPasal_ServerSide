@@ -188,9 +188,19 @@ namespace DvD_Api.Controllers
         {
             return _db.Members
                 .Include(m => m.Loans)
+                .ThenInclude(l => l.CopyNumberNavigation)
+                .ThenInclude(c => c.DvdnumberNavigation)
                 .Where(m => m.Loans.OrderBy(l => l.DateOut)
                 .LastOrDefault().DateOut.AddDays(31) < DateTime.Now)
-                .OrderBy(m => m.Loans.OrderBy(l => l.DateOut).LastOrDefault().DateOut);
+                .OrderBy(m => m.Loans.OrderBy(l => l.DateOut).LastOrDefault().DateOut).Select(o => new { 
+                    FirstName = o.FirstName,
+                    LastName = o.LastName,
+                    Address = o.Address,
+                    RecentDvdTitle = o.Loans.OrderBy(l => l.DateOut).LastOrDefault().CopyNumberNavigation.DvdnumberNavigation.DvdName,
+                    DaysSinceLoan = (DateTime.Now - o.Loans.OrderBy(l => l.DateOut).LastOrDefault().DateOut).Days,
+                    DateOut = o.Loans.OrderBy(l => l.DateOut).LastOrDefault().DateOut
+
+                });
         }
 
 

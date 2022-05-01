@@ -93,6 +93,9 @@ namespace DvD_Api.Controllers
             return Ok("User created successfully.");
         }
 
+        //[HttpPost]
+        //[Route("changePassword")]
+
         private JwtSecurityToken GetToken(List<Claim> authClaims)
         {
             var authSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JWT:Secret"]));
