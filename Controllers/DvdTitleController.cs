@@ -91,6 +91,14 @@ namespace DvD_Api.Controllers
 
         }
 
+        [HttpGet("forCopy")]
+        public IEnumerable<object> GetForCopy() {
+            return _db.Dvdtitles.Select(d => new { 
+                DvdId = d.DvdNumber,
+                DvDName = d.DvdName
+            });
+        }
+
 
         [HttpGet]
         public List<Dvdtitle> GetAllDvd()
