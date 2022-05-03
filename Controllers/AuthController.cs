@@ -120,14 +120,27 @@ namespace DvD_Api.Controllers
         }
 
         [HttpPost]
+        [Authorize]
         [Route("changeUserPassword")]
         public async Task<IActionResult> ChangeUserPassword(UserPasswordDto passwordChange) {
-            // TODO decode bearer token and compare user.
+
+            var currentUserName = User.Identity.Name;
+
+            var currentUser = _userManager.Users.FirstOrDefault(x => x.UserName == currentUserName);
+            if (currentUser == null) {
+                return NotFound("User not found!");
+            }
+            
             var user = await _userManager.FindByIdAsync(passwordChange.UserId);
-            // TODO check if the user id belongs to the current user. 
+
             if (user == null)
             {
                 return NotFound("User not found!");
+            }
+
+            if (user.Id != currentUser.Id)
+            {
+                return StatusCode(StatusCodes.Status401Unauthorized, "Unable to change password!");
             }
 
             var passwordHash = _userManager.PasswordHasher.HashPassword(user, passwordChange.NewPassword);

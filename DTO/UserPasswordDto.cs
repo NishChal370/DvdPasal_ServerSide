@@ -9,7 +9,5 @@ namespace DvD_Api.DTO
         [Required]
         [DataType(DataType.Password)]
         public string NewPassword { get; set; }
-        [Required]
-        public string Token { get; set; }
     }
 }
