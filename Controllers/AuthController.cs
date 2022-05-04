@@ -59,6 +59,7 @@ namespace DvD_Api.Controllers
                 {
                     token = new JwtSecurityTokenHandler().WriteToken(token),
                     userName = user.UserName,
+                    userId = user.Id,
                     expiration = token.ValidTo
                 });
             }
@@ -141,6 +142,7 @@ namespace DvD_Api.Controllers
         }
 
         [HttpPost]
+        [Route("changeUserInfo")]
         public async Task<IActionResult> ChangeUserInfo(RopeyUserDto user)
         {
             var currentUser = await _userManager.FindByIdAsync(user.Id);
@@ -211,7 +213,17 @@ namespace DvD_Api.Controllers
                 return StatusCode(StatusCodes.Status401Unauthorized, "Unable to change password!");
             }
 
+            var oldPasswordHash = _userManager.PasswordHasher.HashPassword(user, passwordChange.OldPassword);
+
             var passwordHash = _userManager.PasswordHasher.HashPassword(user, passwordChange.NewPassword);
+
+            var doesPasswordMatch = _userManager.PasswordHasher.VerifyHashedPassword(user, user.PasswordHash, passwordChange.OldPassword);
+
+            if (doesPasswordMatch == PasswordVerificationResult.Failed)
+            {
+                return BadRequest("Old password do not match!");
+            }
+
             user.PasswordHash = passwordHash;
 
             await _userManager.UpdateAsync(user);
