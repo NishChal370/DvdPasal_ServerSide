@@ -23,7 +23,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(confManager.GetConnectionString("ConnString"))
 );
 
-builder.Services.AddIdentity<RopeyUser,IdentityRole>()
+builder.Services.AddIdentity<RopeyUserDto,IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddDefaultTokenProviders();
 

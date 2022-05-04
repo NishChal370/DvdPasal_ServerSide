@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace DvD_Api.Models
 {
-    public class RopeyUser: IdentityUser
+    public class RopeyUserDto: IdentityUser
     {
 
         [Required]

@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Identity;
 
 namespace DvD_Api.Data
 {
-    public partial class ApplicationDbContext : IdentityDbContext<RopeyUser>
+    public partial class ApplicationDbContext : IdentityDbContext<RopeyUserDto>
     {
 
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)

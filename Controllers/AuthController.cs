@@ -8,6 +8,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using RopeyUserDto = DvD_Api.DTO.RopeyUserDto;
 
 namespace DvD_Api.Controllers
 {
@@ -16,11 +17,11 @@ namespace DvD_Api.Controllers
     public class AuthController : ControllerBase
     {
         private readonly ApplicationDbContext _db;
-        private readonly UserManager<RopeyUser> _userManager;
+        private readonly UserManager<Models.RopeyUserDto> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly IConfiguration _configuration;
         public AuthController(ApplicationDbContext databaseContext,
-            UserManager<RopeyUser> userManager,
+            UserManager<Models.RopeyUserDto> userManager,
             RoleManager<IdentityRole> roleManager,
             IConfiguration configuration)
         {
@@ -56,7 +57,7 @@ namespace DvD_Api.Controllers
                 return Ok(new
                 {
                     token = new JwtSecurityTokenHandler().WriteToken(token),
-                    userName = user.UserName,   
+                    userName = user.UserName,
                     expiration = token.ValidTo
                 });
             }
@@ -72,7 +73,7 @@ namespace DvD_Api.Controllers
             var user = await _userManager.FindByNameAsync(model.UserName);
             if (user != null) return Conflict("Username already exists!");
 
-            RopeyUser newUser = new RopeyUser
+            Models.RopeyUserDto newUser = new Models.RopeyUserDto
             {
                 FirstName = model.FirstName,
                 LastName = model.LastName,
@@ -101,7 +102,7 @@ namespace DvD_Api.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles = UserRoles.ADMIN)]
+        //[Authorize(Roles = UserRoles.ADMIN)]
         [Route("changePasswordAdmin")]
         public async Task<IActionResult> ChangePasswordAdmin(PasswordChangeDto passwordChange)
         {
@@ -119,18 +120,78 @@ namespace DvD_Api.Controllers
             return Ok("Password changed successfully");
         }
 
+        [HttpGet]
+        //[Authorize(Roles = UserRoles.ADMIN)]
+        public IEnumerable<object> GetAllUsers()
+        {
+            return _db.Users.Select( u => new
+            {
+                FirstName = u.FirstName,
+                LastName = u.LastName,
+                Email = u.Email,
+                UserId = u.Id,
+                DateOfBirth = u.DateOfBirth,
+                Gender = u.Gender,
+            });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> ChangeUserInfo(RopeyUserDto user) {
+            var currentUser = await _userManager.FindByIdAsync(user.Id);
+            
+            if (currentUser == null)
+            {
+                return NotFound("User not found");
+            }
+
+            try
+            {
+                var getByEmail = await _userManager.FindByEmailAsync(user.Email);
+                if (getByEmail != null && getByEmail.Id != currentUser.Id) {
+                    return BadRequest("User with the given email already exists!");
+                }
+
+                currentUser.FirstName = user.FirstName;
+                currentUser.LastName = user.LastName;
+                currentUser.Email = user.Email;
+                currentUser.Gender = user.Gender;
+
+                if (!string.IsNullOrWhiteSpace(user.Password))
+                {
+                    var passwordHash = _userManager.PasswordHasher.HashPassword(currentUser, user.Password);
+                    currentUser.PasswordHash = passwordHash;
+                }
+               
+
+                currentUser.DateOfBirth = user.DateOfBirth;
+
+                await _userManager.UpdateAsync(currentUser);
+
+                return Ok();
+
+            }
+            catch (Exception)
+            {
+
+                return BadRequest("User Creation failed!");
+            }
+
+        }
+
         [HttpPost]
         [Authorize]
         [Route("changeUserPassword")]
-        public async Task<IActionResult> ChangeUserPassword(UserPasswordDto passwordChange) {
+        public async Task<IActionResult> ChangeUserPassword(UserPasswordDto passwordChange)
+        {
 
             var currentUserName = User.Identity.Name;
 
             var currentUser = _userManager.Users.FirstOrDefault(x => x.UserName == currentUserName);
-            if (currentUser == null) {
+            if (currentUser == null)
+            {
                 return NotFound("User not found!");
             }
-            
+
             var user = await _userManager.FindByIdAsync(passwordChange.UserId);
 
             if (user == null)

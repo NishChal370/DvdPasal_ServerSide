@@ -9,7 +9,7 @@ namespace DvD_Api
         public async Task CreateSuperAdmin(IServiceProvider serviceProvider)
         {
             var RoleManager = serviceProvider.GetRequiredService<RoleManager<IdentityRole>>();
-            var UserManager = serviceProvider.GetRequiredService<UserManager<RopeyUser>>();
+            var UserManager = serviceProvider.GetRequiredService<UserManager<RopeyUserDto>>();
 
             IdentityResult roleResult;
 
@@ -31,7 +31,7 @@ namespace DvD_Api
             }
 
 
-            var superUser = new RopeyUser
+            var superUser = new RopeyUserDto
             {
                 FirstName = "Mula",
                 LastName = "Prasad",
