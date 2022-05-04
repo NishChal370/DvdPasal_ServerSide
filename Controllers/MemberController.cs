@@ -91,22 +91,48 @@ namespace DvD_Api.Controllers
         }
 
         [HttpGet("{memberId}")]
-        public async Task<Member> GetMember(int memberId)
+        public object GetMember(int memberId)
         {
-            return await _db.Members
+            return _db.Members
                 .Include(m => m.CategoryNumberNavigation)
-                .FirstOrDefaultAsync(m => m.MemberNumber == memberId);
+                .Include(m => m.Loans)
+                .ThenInclude(l => l.CopyNumberNavigation)
+                .ThenInclude(c => c.DvdnumberNavigation)
+                .Where(m => m.MemberNumber == memberId)
+                .Select(m => new {
+                    MemberName = $"{m.FirstName} {m.LastName}",
+                    Loans = m.Loans.Where(l => l.DateOut.AddDays(31) >= DateTime.Now).Select(l => new {
+                        LoanId = l.LoanNumber,
+                        DvdTitle = l.CopyNumberNavigation.DvdnumberNavigation.DvdName,
+                        CopyId = l.CopyNumber,
+                        DateOut = l.DateOut,
+                        DateDue = l.DateDue,
+                        ReturnedDate = l.DateReturned.Value.ToString("d") ?? "Not Returned"
+                    })
+                });
         }
 
         [HttpGet("search/{lastName}")]
-        public async Task<List<Member>> GetMemberByLastName(string lastName)
+        public object GetMemberByLastName(string lastName)
         {
 
-            // TODO replace with 'like' rather than direct comparison. 
-            return await _db.Members
+            return _db.Members
                 .Include(m => m.CategoryNumberNavigation)
+                .Include(m => m.Loans)
+                .ThenInclude(l => l.CopyNumberNavigation)
+                .ThenInclude(c => c.DvdnumberNavigation)
                 .Where(m => m.LastName == lastName)
-                .ToListAsync();
+                .Select(m => new { 
+                    MemberName = $"{m.FirstName} {m.LastName}",
+                    Loans = m.Loans.Where(l => l.DateOut.AddDays(31) >= DateTime.Now ).Select(l => new { 
+                        LoanId = l.LoanNumber,
+                        DvdTitle = l.CopyNumberNavigation.DvdnumberNavigation.DvdName,
+                        CopyId = l.CopyNumber,
+                        DateOut = l.DateOut, 
+                        DateDue = l.DateDue, 
+                        ReturnedDate = l.DateReturned.Value.ToString("d") ?? "Not Returned"
+                    })
+                });
         }
 
         [HttpGet("forLoan")]
