@@ -17,16 +17,14 @@ namespace DvD_Api.Controllers
     [Route("api/user")]
     public class AuthController : ControllerBase
     {
-        private readonly ApplicationDbContext _db;
         private readonly UserManager<Models.RopeyUserDto> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly IConfiguration _configuration;
-        public AuthController(ApplicationDbContext databaseContext,
+        public AuthController(
             UserManager<Models.RopeyUserDto> userManager,
             RoleManager<IdentityRole> roleManager,
             IConfiguration configuration)
         {
-            _db = databaseContext;
             _userManager = userManager;
             _roleManager = roleManager;
             _configuration = configuration;
@@ -104,7 +102,7 @@ namespace DvD_Api.Controllers
         }
 
         [HttpPost]
-        //[Authorize(Roles = UserRoles.ADMIN)]
+        [Authorize(Roles = UserRoles.ADMIN)]
         [Route("changePasswordAdmin")]
         public async Task<IActionResult> ChangePasswordAdmin(PasswordChangeDto passwordChange)
         {
@@ -123,7 +121,7 @@ namespace DvD_Api.Controllers
         }
 
         [HttpGet]
-        //[Authorize(Roles = UserRoles.ADMIN)]
+        [Authorize(Roles = UserRoles.ADMIN)]
         public async Task<IEnumerable<object>> GetAllUsers()
         {
 
@@ -142,8 +140,60 @@ namespace DvD_Api.Controllers
         }
 
         [HttpPost]
+        [Authorize]
         [Route("changeUserInfo")]
-        public async Task<IActionResult> ChangeUserInfo(RopeyUserDto user)
+        public async Task<IActionResult> ChangeUserInfo(UserInfoDto user)
+        {
+            var currentUserName = User.Identity.Name;
+            var currentUser = await _userManager.FindByNameAsync(currentUserName);
+
+            try
+            {
+                var getByEmail = await _userManager.FindByEmailAsync(user.Email);
+                if (getByEmail != null && getByEmail.Id != currentUser.Id)
+                {
+                    return BadRequest("User with the given email already exists!");
+                }
+
+                currentUser.FirstName = user.FirstName;
+                currentUser.LastName = user.LastName;
+                currentUser.Email = user.Email;
+                currentUser.Gender = user.Gender;
+
+                if (!string.IsNullOrWhiteSpace(user.Password))
+                {
+                    var doesPasswordMatch = _userManager.PasswordHasher.VerifyHashedPassword(currentUser, currentUser.PasswordHash, user.OldPassword);
+
+                    if (doesPasswordMatch == PasswordVerificationResult.Failed)
+                    {
+                        return BadRequest("Old password do not match!");
+                    }
+
+                    var passwordHash = _userManager.PasswordHasher.HashPassword(currentUser, user.Password);
+                    currentUser.PasswordHash = passwordHash;
+                }
+
+
+                currentUser.DateOfBirth = user.DateOfBirth;
+
+                await _userManager.UpdateAsync(currentUser);
+
+                return Ok();
+
+            }
+            catch (Exception)
+            {
+
+                return BadRequest("User Creation failed!");
+            }
+
+        }
+
+
+        [HttpPost]
+        [Route("changeUserInfoAdmin")]
+        [Authorize(Roles = UserRoles.ADMIN)]
+        public async Task<IActionResult> ChangeUserInfoAdmin(RopeyUserDto user)
         {
             var currentUser = await _userManager.FindByIdAsync(user.Id);
 
@@ -201,32 +251,20 @@ namespace DvD_Api.Controllers
                 return NotFound("User not found!");
             }
 
-            var user = await _userManager.FindByIdAsync(passwordChange.UserId);
+            var oldPasswordHash = _userManager.PasswordHasher.HashPassword(currentUser, passwordChange.OldPassword);
 
-            if (user == null)
-            {
-                return NotFound("User not found!");
-            }
+            var passwordHash = _userManager.PasswordHasher.HashPassword(currentUser, passwordChange.NewPassword);
 
-            if (user.Id != currentUser.Id)
-            {
-                return StatusCode(StatusCodes.Status401Unauthorized, "Unable to change password!");
-            }
-
-            var oldPasswordHash = _userManager.PasswordHasher.HashPassword(user, passwordChange.OldPassword);
-
-            var passwordHash = _userManager.PasswordHasher.HashPassword(user, passwordChange.NewPassword);
-
-            var doesPasswordMatch = _userManager.PasswordHasher.VerifyHashedPassword(user, user.PasswordHash, passwordChange.OldPassword);
+            var doesPasswordMatch = _userManager.PasswordHasher.VerifyHashedPassword(currentUser, currentUser.PasswordHash, passwordChange.OldPassword);
 
             if (doesPasswordMatch == PasswordVerificationResult.Failed)
             {
                 return BadRequest("Old password do not match!");
             }
 
-            user.PasswordHash = passwordHash;
+            currentUser.PasswordHash = passwordHash;
 
-            await _userManager.UpdateAsync(user);
+            await _userManager.UpdateAsync(currentUser);
 
             return Ok("Password changed successfully");
         }
