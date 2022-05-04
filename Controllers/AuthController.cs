@@ -4,6 +4,7 @@ using DvD_Api.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -122,23 +123,28 @@ namespace DvD_Api.Controllers
 
         [HttpGet]
         //[Authorize(Roles = UserRoles.ADMIN)]
-        public IEnumerable<object> GetAllUsers()
+        public async Task<IEnumerable<object>> GetAllUsers()
         {
-            return _db.Users.Select( u => new
-            {
-                FirstName = u.FirstName,
-                LastName = u.LastName,
-                Email = u.Email,
-                UserId = u.Id,
-                DateOfBirth = u.DateOfBirth,
-                Gender = u.Gender,
-            });
+
+            var mUsers = await _userManager.GetUsersInRoleAsync(UserRoles.ASSISTANT);
+
+
+             return mUsers.Select(u => new
+             {
+                 FirstName = u.FirstName,
+                 LastName = u.LastName,
+                 Email = u.Email,
+                 UserId = u.Id,
+                 DateOfBirth = u.DateOfBirth,
+                 Gender = u.Gender,
+             });
         }
 
         [HttpPost]
-        public async Task<IActionResult> ChangeUserInfo(RopeyUserDto user) {
+        public async Task<IActionResult> ChangeUserInfo(RopeyUserDto user)
+        {
             var currentUser = await _userManager.FindByIdAsync(user.Id);
-            
+
             if (currentUser == null)
             {
                 return NotFound("User not found");
@@ -147,7 +153,8 @@ namespace DvD_Api.Controllers
             try
             {
                 var getByEmail = await _userManager.FindByEmailAsync(user.Email);
-                if (getByEmail != null && getByEmail.Id != currentUser.Id) {
+                if (getByEmail != null && getByEmail.Id != currentUser.Id)
+                {
                     return BadRequest("User with the given email already exists!");
                 }
 
@@ -161,7 +168,7 @@ namespace DvD_Api.Controllers
                     var passwordHash = _userManager.PasswordHasher.HashPassword(currentUser, user.Password);
                     currentUser.PasswordHash = passwordHash;
                 }
-               
+
 
                 currentUser.DateOfBirth = user.DateOfBirth;
 
