@@ -65,7 +65,8 @@ namespace DvD_Api.Controllers
                 }
 
                 var dvdImageList = new List<DvDimage>();
-                foreach (var image in dvdTitle.DvDImages) {
+                foreach (var image in dvdTitle.DvDImages)
+                {
 
                     SKBitmap imageBitmap = image.Image64.GetBitmap();
                     SKPixmap pixMap = imageBitmap.PeekPixels();
@@ -76,7 +77,8 @@ namespace DvD_Api.Controllers
                     var base64String = "data:image/webp;base64," + data.AsStream().ConvertToBase64();
 
 
-                    var mDvdImage = new DvDimage { 
+                    var mDvdImage = new DvDimage
+                    {
                         DvDimageId = 0,
                         Image64 = base64String,
                     };
@@ -114,8 +116,10 @@ namespace DvD_Api.Controllers
         }
 
         [HttpGet("forCopy")]
-        public IEnumerable<object> GetForCopy() {
-            return _db.Dvdtitles.Select(d => new { 
+        public IEnumerable<object> GetForCopy()
+        {
+            return _db.Dvdtitles.Select(d => new
+            {
                 DvdId = d.DvdNumber,
                 DvDName = d.DvdName
             });
@@ -197,7 +201,8 @@ namespace DvD_Api.Controllers
             // Only get the dvd title if there were no copies in loan.
             var unpopularDvDTitles = _db.Dvdtitles.Include(d => d.Dvdcopies).Where(d => d.Dvdcopies.Count == unpopularCopies.Where(c => c.Dvdnumber == d.DvdNumber).Count());
 
-            return unpopularDvDTitles.Select(x => new { 
+            return unpopularDvDTitles.Select(x => new
+            {
                 DvDName = x.DvdName,
                 DateReleased = x.DateReleased.ToString("d"),
                 NumCopies = x.Dvdcopies.Count(),
@@ -221,6 +226,33 @@ namespace DvD_Api.Controllers
 
             return Ok();
         }
+
+        [HttpGet("getMostLoaned")]
+        public object GetMostLoaned()
+        {
+            var mDvdCopies = _db.Dvdcopies.Include(c => c.Loans)
+            .AsNoTracking()
+            .Include(c => c.DvdnumberNavigation)
+            .ThenInclude(d => d.DvDimages)
+            .OrderBy(c => c.Loans.Count())
+            .Select(c => c.Dvdnumber)
+            .ToList();
+
+            var mTitles = _db.Dvdtitles.Include(d => d.Dvdcopies)
+                .ThenInclude(c => c.Loans)
+                .Where(d => mDvdCopies.Contains(d.DvdNumber)).Select(d => new
+                {
+                    DvDName = d.DvdName,
+                    DvDId = d.DvdNumber,
+                    DvDImage = d.DvDimages.FirstOrDefault().Image64,
+                    TotalLoans = d.Dvdcopies.GetTotalCount()
+                }).ToList()
+            .DistinctBy(c => c.DvDId).Take(5);
+
+            return mTitles;
+
+        }
+
 
     }
 }
