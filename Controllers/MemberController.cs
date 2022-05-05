@@ -2,6 +2,7 @@
 using DvD_Api.DTO;
 using DvD_Api.Extentions;
 using DvD_Api.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SkiaSharp;
@@ -12,6 +13,7 @@ namespace DvD_Api.Controllers
 
     [ApiController]
     [Route("api/[Controller]")]
+    [Authorize]
     public class MemberController : ControllerBase
     {
         private readonly ApplicationDbContext _db;
