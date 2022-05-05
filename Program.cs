@@ -8,10 +8,6 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 
 
-// TODO change return message for add copy
-// TODO add image to loan copy
-// TODO change app title
-// TODO add change user info by admin and user
 
 var builder = WebApplication.CreateBuilder(args);
 
