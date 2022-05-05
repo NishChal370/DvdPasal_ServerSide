@@ -65,6 +65,25 @@ namespace DvD_Api.Controllers
             return Unauthorized("Username or password incorrect.");
         }
 
+        [HttpGet("getCurrentUser")]
+        [Authorize]
+        public async Task<object> GetCurrentUser(){
+            var userName = User.Identity.Name;
+            var currentUser = await _userManager.FindByNameAsync(userName);
+
+            if(currentUser == null){
+                return NotFound("User not found!");
+            }
+
+            return new {
+                FirstName = currentUser.FirstName,
+                LastName = currentUser.LastName,
+                Email = currentUser.Email,
+                Gender = currentUser.Gender,
+                DateOfBirth = currentUser.DateOfBirth.ToString("d")
+            };
+        }
+
         [HttpPost]
         [Route("register")]
         public async Task<IActionResult> RegisterUser([FromBody] RegisterModel model)
@@ -72,6 +91,9 @@ namespace DvD_Api.Controllers
 
             var user = await _userManager.FindByNameAsync(model.UserName);
             if (user != null) return Conflict("Username already exists!");
+
+            var userByEmail = await _userManager.FindByEmailAsync(model.Email);
+            if (userByEmail != null) return Conflict("Email already exists!");
 
             Models.RopeyUserDto newUser = new Models.RopeyUserDto
             {
@@ -159,20 +181,6 @@ namespace DvD_Api.Controllers
                 currentUser.LastName = user.LastName;
                 currentUser.Email = user.Email;
                 currentUser.Gender = user.Gender;
-
-                if (!string.IsNullOrWhiteSpace(user.Password))
-                {
-                    var doesPasswordMatch = _userManager.PasswordHasher.VerifyHashedPassword(currentUser, currentUser.PasswordHash, user.OldPassword);
-
-                    if (doesPasswordMatch == PasswordVerificationResult.Failed)
-                    {
-                        return BadRequest("Old password do not match!");
-                    }
-
-                    var passwordHash = _userManager.PasswordHasher.HashPassword(currentUser, user.Password);
-                    currentUser.PasswordHash = passwordHash;
-                }
-
 
                 currentUser.DateOfBirth = user.DateOfBirth;
 

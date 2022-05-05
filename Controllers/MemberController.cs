@@ -25,15 +25,19 @@ namespace DvD_Api.Controllers
         public async Task<IActionResult> CreateMember(AddMemberDto member)
         {
 
+            if(member.DateOfBirth.AddYears(13) > DateTime.Now){
+                return UnprocessableEntity("You need to be 13 or older to be a member!");
+            }
+
             using var transaction = _db.Database.BeginTransaction();
             // Add both member and category or none.
             try
             {
-                var membershipCatagory = member.MembershipCategory;
-                if (membershipCatagory.McategoryNumber == 0)
+                var membershipCategory = member.MembershipCategory;
+                if (membershipCategory.McategoryNumber == 0)
                 {
                     // Add the category first and get a new id.
-                    await _db.MembershipCategories.AddAsync(membershipCatagory);
+                    await _db.MembershipCategories.AddAsync(membershipCategory);
                     await _db.SaveChangesAsync();
                 }
 
@@ -62,7 +66,7 @@ namespace DvD_Api.Controllers
                 var nMember = new Member
                 {
                     MemberNumber = 0,
-                    CategoryNumber = membershipCatagory.McategoryNumber,
+                    CategoryNumber = membershipCategory.McategoryNumber,
                     FirstName = member.FristName,
                     LastName = member.LastName,
                     Address = member.Address,
