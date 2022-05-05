@@ -1,6 +1,7 @@
 ﻿using DvD_Api.Data;
 using DvD_Api.DTO;
 using DvD_Api.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -9,6 +10,7 @@ namespace DvD_Api.Controllers
 {
     [ApiController]
     [Route("api/[Controller]")]
+    [Authorize]
     public class LoanController : ControllerBase
     {
         public readonly ApplicationDbContext _db;

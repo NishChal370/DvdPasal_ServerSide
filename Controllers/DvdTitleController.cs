@@ -2,6 +2,7 @@
 using DvD_Api.DTO;
 using DvD_Api.Extentions;
 using DvD_Api.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SkiaSharp;
@@ -10,6 +11,7 @@ namespace DvD_Api.Controllers
 {
     [ApiController]
     [Route("api/[Controller]")]
+    [Authorize]
     public class DvdTitleController : ControllerBase
     {
         private readonly ApplicationDbContext _db;
@@ -123,6 +125,7 @@ namespace DvD_Api.Controllers
 
 
         [HttpGet]
+        [AllowAnonymous]
         public List<Dvdtitle> GetAllDvd()
         {
             return _db.Dvdtitles
@@ -134,6 +137,7 @@ namespace DvD_Api.Controllers
         }
 
         [HttpGet("details")]
+        [AllowAnonymous]
         public IEnumerable<Dvdtitle> GetDvdDetails()
         {
             return _db.Dvdtitles.Include(d => d.DvDimages)
@@ -144,6 +148,7 @@ namespace DvD_Api.Controllers
         }
 
         [HttpGet("byId/{dvdId}")]
+        [AllowAnonymous]
         public async Task<Dvdtitle> GetTitleById(int dvdId)
         {
             return await _db.Dvdtitles
@@ -155,6 +160,7 @@ namespace DvD_Api.Controllers
         }
 
         [HttpGet("byLastName/{lastName}")]
+        [AllowAnonymous]
         public IEnumerable<Dvdtitle> GetTitlesByLastName(string lastName)
         {
             return _db.Dvdtitles
