@@ -32,6 +32,7 @@ namespace DvD_Api.Controllers
 
 
         [HttpPost]
+        [AllowAnonymous]
         [Route("login")]
         public async Task<IActionResult> Login(LoginModel loginModel)
         {
@@ -85,6 +86,7 @@ namespace DvD_Api.Controllers
         }
 
         [HttpPost]
+        [AllowAnonymous]
         [Route("register")]
         public async Task<IActionResult> RegisterUser([FromBody] RegisterModel model)
         {
