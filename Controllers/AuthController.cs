@@ -52,7 +52,7 @@ namespace DvD_Api.Controllers
                     authClaims.Add(new Claim(ClaimTypes.Role, role));
                 }
 
-                var token = GetToken(authClaims);
+                var token = GetToken(authClaims, loginModel.RememberMe);
 
                 return Ok(new
                 {
@@ -280,7 +280,7 @@ namespace DvD_Api.Controllers
         }
 
         [HttpPost]
-        private JwtSecurityToken GetToken(List<Claim> authClaims)
+        private JwtSecurityToken GetToken(List<Claim> authClaims, bool rememberMe)
         {
             var authSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JWT:Secret"]));
 
@@ -288,7 +288,7 @@ namespace DvD_Api.Controllers
                     issuer: _configuration["JWT:ValidIssuer"],
                     audience: _configuration["JWT: ValidAudiance"],
                     claims: authClaims,
-                    expires: DateTime.Now.AddDays(7),
+                    expires: rememberMe ? DateTime.Now.AddDays(7) : DateTime.Now.AddHours(12),
                     signingCredentials: new SigningCredentials(authSigningKey, SecurityAlgorithms.HmacSha256)
                 );
         }
