@@ -253,7 +253,7 @@ namespace DvD_Api.Controllers
                     DvDImage = d.DvDimages.FirstOrDefault().Image64,
                     TotalLoans = d.Dvdcopies.GetTotalCount()
                 }).ToList()
-            .DistinctBy(c => c.DvDId).Take(5);
+            .DistinctBy(c => c.DvDId).OrderByDescending(o => o.TotalLoans).Take(4);
 
             return mTitles;
 
