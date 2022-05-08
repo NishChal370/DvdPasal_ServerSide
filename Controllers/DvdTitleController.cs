@@ -238,6 +238,7 @@ namespace DvD_Api.Controllers
         }
 
         [HttpGet("getMostLoaned")]
+        [AllowAnonymous]
         public object GetMostLoaned()
         {
             var mDvdCopies = _db.Dvdcopies.Include(c => c.Loans)
