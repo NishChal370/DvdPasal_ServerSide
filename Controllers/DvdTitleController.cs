@@ -190,7 +190,11 @@ namespace DvD_Api.Controllers
 
             var dvdInLoan = _db.Loans.Where(l => l.DateReturned == null).Where(l => mDvD.Contains(l.CopyNumberNavigation.DvdnumberNavigation));
 
-            return dvdInLoan.Select(l => l.CopyNumberNavigation.DvdnumberNavigation);
+            return dvdInLoan
+            .Include(c => c.CopyNumberNavigation.DvdnumberNavigation.DvDimages)
+            .Include(c => c.CopyNumberNavigation.DvdnumberNavigation.ActorNumbers)
+            .Include(c => c.CopyNumberNavigation.DvdnumberNavigation.CategoryNumberNavigation)
+            .Select(l => l.CopyNumberNavigation.DvdnumberNavigation).ToList().DistinctBy(c => c.DvdNumber);
         }
 
         [HttpGet("unpopular")]
