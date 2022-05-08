@@ -50,21 +50,22 @@ namespace DvD_Api.Controllers
                 return BadRequest($"Member with id {loan.MemberNumber} does not exist");
             }
 
+            // Check if the member is old enough to rent the dvd.
             if (dvdTitle.CategoryNumberNavigation.AgeRestricted && !member.IsOldEnough())
             {
                 return BadRequest($"Member with id {member.MemberNumber} is too young for this movie.");
             }
 
+            var loanType = _db.LoanTypes.Where(t => t.LoanTypeNumber == loan.LoanTypeId).FirstOrDefault();
+            if (loanType == null)
+            {
+                return BadRequest($"Loan Type with id {loan.LoanTypeId} does not exist.");
+
+            }
+
             using var transaction = _db.Database.BeginTransaction();
             try
             {
-
-                var loanType = _db.LoanTypes.Where(t => t.LoanTypeNumber == loan.LoanTypeId).FirstOrDefault();
-                if (loanType == null)
-                {
-                    return BadRequest($"Loan Type with id {loanType.LoanTypeNumber} does not exist.");
-
-                }
 
                 var mLoan = new Loan
                 {
@@ -87,8 +88,8 @@ namespace DvD_Api.Controllers
                     DvdTitle = dvdTitle.DvdName,
                     StandardPrice = dvdTitle.StandardCharge,
                     MemberName = $"{member.FirstName} {member.LastName}",
-                    DateOut = loan.DateOut,
-                    DateDue = mLoan.DateDue,
+                    DateOut = loan.DateOut.ToString("d"),
+                    DateDue = mLoan.DateDue.ToString("d"),
                     LoanType = loanType.LoanTypeName
                 });
             }
